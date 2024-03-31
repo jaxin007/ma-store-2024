@@ -7,7 +7,7 @@ const itemCardTemplate = document.querySelector('[item-card]');
 
   const responseJson = await response.json();
 
-  const itemsCartArray = JSON.parse(localStorage.getItem('itemsCart') || []);
+  const itemsCartArray = JSON.parse(localStorage.getItem('itemsCart') || '[]');
 
   const addToCart = (productId) => {
     if (itemsCartArray.includes(productId)) {
