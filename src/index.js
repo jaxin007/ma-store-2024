@@ -7,9 +7,7 @@ const itemCardTemplate = document.querySelector('[item-card]');
 
   const responseJson = await response.json();
 
-  const itemsCartMaybe = localStorage.getItem('itemsCart');
-
-  const itemsCartArray = itemsCartMaybe ? JSON.parse(itemsCartMaybe) : [];
+  const itemsCartArray = JSON.parse(localStorage.getItem('itemsCart') || []);
 
   const addToCart = (productId) => {
     if (itemsCartArray.includes(productId)) {
@@ -33,18 +31,42 @@ const itemCardTemplate = document.querySelector('[item-card]');
     localStorage.setItem('itemsCart', JSON.stringify(itemsCartArray));
   }
 
-  const renderStore = () => {
-    itemsListElement.innerHTML = ''
+  const renderStore = (products) => {
+    itemsListElement.innerHTML = '';
 
-    responseJson.forEach((product) => {
+    products.forEach((product) => {
       const cardElement = itemCardTemplate.content.cloneNode(true);
 
       cardElement.querySelector('[item-image]').src = './public/t-shirt.jpeg';
       cardElement.querySelector('[item-name]').innerText = product.title;
-      cardElement.querySelector('[item-description]').innerText = product.description;
       cardElement.querySelector('[item-category]').innerText = product.category.name;
       cardElement.querySelector('[item-price-value]').innerText = '$ ' + product.price;
 
+      // --- Dynamic description logic
+      const descriptionElement = cardElement.querySelector('[item-description]');
+      const readMoreSpan = cardElement.querySelector('[item-read-more]');
+
+      const isDescriptionLong = product.description.length >= 30;
+
+      if (!isDescriptionLong) {
+        readMoreSpan.style.display = 'none';
+      }
+
+      const descriptionFirstPart = isDescriptionLong ? product.description.slice(0, 30) : product.description;
+      const descriptionSecondPart = isDescriptionLong ? product.description.slice(30, product.description.length) : product.description;
+
+      descriptionElement.innerText = descriptionFirstPart;
+
+      readMoreSpan.addEventListener('click', () => {
+        if (!isDescriptionLong) {
+          return;
+        }
+
+        descriptionElement.innerText = descriptionFirstPart + descriptionSecondPart;
+        readMoreSpan.style.display = 'none';
+      })
+
+      // --- Add To Cart button logic
       const isProductInCart = itemsCartArray.includes(product.id);
 
       const cartButton = cardElement.querySelector('[item-add-to-cart-button]');
@@ -52,7 +74,7 @@ const itemCardTemplate = document.querySelector('[item-card]');
       cartButton.addEventListener('click', () => {
         isProductInCart ? removeFromCart(product.id) : addToCart(product.id);
 
-        renderStore();
+        renderStore(products);
       });
 
       cartButton.textContent = isProductInCart ? 'Remove from cart' : 'Add to cart';
@@ -62,5 +84,5 @@ const itemCardTemplate = document.querySelector('[item-card]');
     })
   }
 
-  renderStore()
+  renderStore(responseJson);
 })()
